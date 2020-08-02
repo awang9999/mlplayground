@@ -132,7 +132,7 @@ for i in range(len(dataset[0])-1):
 str_column_to_int(dataset, len(dataset[0])-1)
 # evaluate algorithm
 n_folds = 6
-num_neighbors = 7
+num_neighbors = 5
 scores = evaluate_algorithm(dataset, k_nearest_neighbors, n_folds, num_neighbors)
 print('Scores: %s' % scores)
 print('Mean Accuracy: %.3f%%' % (sum(scores)/float(len(scores))))
