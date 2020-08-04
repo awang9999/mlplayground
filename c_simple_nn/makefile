@@ -1,5 +1,5 @@
 # Source, Executable, Includes, Library Defines
-INCL   = maths.h
+INCL   = vector.h point.h arraylist.h
 SRC    = $(wildcard *.c)
 OBJ    = $(SRC:.c=.o)
 LIBS   = 
@@ -7,7 +7,7 @@ EXE    = xor_nn
 
 # Compiler, Linker Defines
 CC      = /usr/bin/gcc
-CFLAGS  = -ansi -pedantic -Wall -O2
+CFLAGS  = -ansi -pedantic -Wall -O2 -std=c99
 LIBPATH = -L.
 LDFLAGS = -o $(EXE) $(LIBPATH) $(LIBS)
 CFDEBUG = -ansi -pedantic -Wall -g -DDEBUG $(LDFLAGS)
