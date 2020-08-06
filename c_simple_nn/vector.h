@@ -1,5 +1,5 @@
-#ifndef MATHS_H
-#define MATHS_H
+#ifndef VECTOR_H
+#define VECTOR_H
 
 #include <stdbool.h>
 #include "arraylist.h"
@@ -13,6 +13,7 @@ typedef struct
 } Vector;
 
 /* Constructor and Destructor */
+
 void v_init(Vector *v, int dim);
 void v_free_memory(Vector *v);
 

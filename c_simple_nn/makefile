@@ -1,16 +1,16 @@
 # Source, Executable, Includes, Library Defines
-INCL   = vector.h point.h arraylist.h
+INCL   = $(wildcard *.h)
 SRC    = $(wildcard *.c)
 OBJ    = $(SRC:.c=.o)
-LIBS   = 
+LIBS   = -lm
 EXE    = xor_nn
 
 # Compiler, Linker Defines
 CC      = /usr/bin/gcc
-CFLAGS  = -ansi -pedantic -Wall -O2 -std=c99
+CFLAGS  = -std=c99 -Wall -O2
 LIBPATH = -L.
 LDFLAGS = -o $(EXE) $(LIBPATH) $(LIBS)
-CFDEBUG = -ansi -pedantic -Wall -g -DDEBUG $(LDFLAGS)
+CFDEBUG = -std=c99c -Wall -g -DDEBUG $(LDFLAGS)
 RM      = /bin/rm -f
 
 # Compile and Assemble C Source Files into Object Files
@@ -19,7 +19,7 @@ RM      = /bin/rm -f
 
 # Link all Object Files with external Libraries into Binaries
 $(EXE): $(OBJ)
-	$(CC) $(LDFLAGS) $(OBJ)
+	$(CC) $(OBJ) $(LDFLAGS)
 
 # Objects depend on these Libraries
 $(OBJ): $(INCL)

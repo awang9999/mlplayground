@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "vector.h"
+#include "math_helper.h"
 
 /* Constructor and Destructor */
 void v_init(Vector *v, int dim)
@@ -21,7 +22,7 @@ void v_free_memory(Vector *v)
 }
 
 /* Mutators */
-/* All mutators modify the first vector provided as an argument 
+/* All mutators modify the first vector provided as an argument
   (and leaves the second vector unmodified if it exists). */
 
 void v_add(Vector *v1, Vector *v2)
@@ -133,26 +134,6 @@ void v_full_print(Vector *v)
 {
     printf("(Dimensions: %d) ", v->dim);
     v_print(v);
-}
-
-const double EPSILON = 0.00000001;
-
-double abs_val(double a)
-{
-    if (a < 0)
-    {
-        return -a;
-    }
-    return a;
-}
-
-bool double_equals(double a, double b)
-{
-    if (abs_val(a - b) > EPSILON)
-    {
-        return false;
-    }
-    return true;
 }
 
 bool v_equals(Vector *v1, Vector *v2)

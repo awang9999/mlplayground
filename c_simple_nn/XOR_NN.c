@@ -4,23 +4,37 @@ Project: C Neural Network that learns XOR
 Author: Alexander Wang (aw576@cornell.edu/alexander.wang2001@gmail.com)
 Last updated: 2020-08-04
 
-Description: 
+Description:
 In this project, I will attempt to recreate the popular
-simple neural network that learns fuzzy XOR behavior from scratch in 
+simple neural network that learns fuzzy XOR behavior from scratch in
 the C language. Modules such as ArrayList.c and Vector.c were inspired
 from the works of previous C programmers and extended in functionality
 by myself. The neural network code will be guided by Santiago
-Becerra's article. 
+Becerra's article.
 (https://towardsdatascience.com/simple-neural-network-implementation-in-c-663f51447547).
 
 This neural network will consist of 1 hidden layer with two hidden nodes. This
 will be the simplest architecture capable of learning the fuzzy XOR behavior.
+
+Expected XOR Behavior:
+A    B    Output
+----------------
+0    0       0
+0    1       1
+1    0       1
+1    1       0
+
+Planned Activation functions for each layer:
+Input layer: identity
+Hidden layer: tanh
+Output layer: sigmoid
+
 */
+
 #include <stdio.h>
 #include <time.h>
-#include "point.h"
-#include "arraylist.h"
 #include "vector.h"
+#include "matrix.h"
 
 void test_ArrayLists()
 {
@@ -225,14 +239,151 @@ void test_Vectors()
     printf("Completed in %f seconds. \n", cpu_time_used);
 }
 
+void print_test_matrix_results(Matrix *a, Matrix *b, Matrix *c) {
+    printf("Results.\n");
+    printf("Matrix A:\n");
+    m_full_print(a);
+    printf("Matrix B:\n");
+    m_full_print(b);
+    printf("Matrix C:\n");
+    m_full_print(c);
+    printf("\n");
+    printf("\n");
+}
+
+void test_Matrix() {
+    clock_t start, end;
+    double cpu_time_used;
+    start = clock();
+
+    printf("Initializing Matrices... ");
+    Matrix a;
+    Matrix b;
+    Matrix c;
+    Matrix mult_result;
+    Matrix copy_result;
+    m_identity(&a, 5);
+    m_init(&b, 5, 6);
+    m_init(&c, 6, 5);
+    printf("Done.\n");
+
+    print_test_matrix_results(&a, &b, &c);
+
+    printf("Filling Matrix B and C... ");
+    int p = 1;
+    for (int i = 0; i < (&b)->rows; i++) {
+        for (int j = 0; j < (&b)->cols; j++) {
+            m_set(&b, i, j, p);
+            p++;
+        }
+    }
+    p = 1;
+    for (int i = 0; i < (&c)->rows; i++) {
+        for (int j = 0; j < (&c)->cols; j++) {
+            m_set(&c, i, j, p);
+            p++;
+        }
+    }
+    printf("Done.\n");
+    print_test_matrix_results(&a, &b, &c);
+
+    printf("Multiplying B and C into mult_result... ");
+    m_mult(&b, &c, &mult_result);
+    printf("Done\n");
+
+    printf("Result of mult_result:\n");
+    m_full_print(&mult_result);
+    printf("\n");
+
+    printf("Copying mult_result into copy_result... ");
+    m_copy(&mult_result, &copy_result);
+    printf("Done\n");
+
+    printf("Result of copy_result:\n");
+    m_full_print(&copy_result);
+    printf("\n");
+
+    m_free_memory(&a);
+    m_free_memory(&b);
+    m_free_memory(&c);
+    m_free_memory(&mult_result);
+    m_free_memory(&copy_result);
+
+    printf("All tests for Matrix module done.\n");
+    end = clock();
+    cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+    printf("Completed in %f seconds. \n", cpu_time_used);
+}
+
 void test_all()
 {
     test_ArrayLists();
     test_Vectors();
+    test_Matrix();
 }
 
 /* ACTUAL CODE FOR NEURAL NET BEGINS HERE. */
 
 int main()
 {
+    //Clock stuff
+    clock_t start, end;
+    start = clock();
+
+    //Neural network code
+
+    static const int num_inputs = 2;
+    static const int num_hidden = 2;
+    static const int num_outputs = 1;
+
+    Matrix hidden_layer;
+    m_init(&hidden_layer, num_hidden, 1);
+
+    Matrix output_layer;
+    m_init(&output_layer, num_outputs, 1);
+
+    Matrix hidden_bias;
+    m_init(&hidden_bias, num_hidden, 1);
+
+    Matrix output_bias;
+    m_init(&output_bias, num_outputs, 1);
+
+    Matrix hidden_weights;
+    m_init(&hidden_weights, num_inputs, num_hidden);
+
+    Matrix output_weights;
+    m_init(&output_weights, num_hidden, num_outputs);
+
+    static const int num_training_sets = 4;
+    Matrix training_inputs;
+    m_init(&training_inputs, 4, 2);
+    m_set(&training_inputs, 1, 0, 1);
+    m_set(&training_inputs, 2, 1, 1);
+    m_set(&training_inputs, 3, 0, 1);
+    m_set(&training_inputs, 3, 1, 1);
+
+    m_full_print(&training_inputs);
+
+    Matrix training_outputs;
+    m_init(&training_outputs, 4, 1);
+    m_set(&training_outputs, 1, 0, 1);
+    m_set(&training_outputs, 2, 0, 1);
+
+    m_full_print(&training_outputs);
+
+    m_free_memory(&hidden_layer);
+    m_free_memory(&output_layer);
+    m_free_memory(&hidden_bias);
+    m_free_memory(&output_bias);
+    m_free_memory(&hidden_weights);
+    m_free_memory(&output_weights);
+    m_free_memory(&training_inputs);
+    m_free_memory(&training_outputs);
+    //End of Neural network code
+
+    //Clean up and end clock stuff
+    printf("main() finished.\n");
+    end = clock();
+    printf("Completed in %f seconds. \n", ((double)(end-start)) / CLOCKS_PER_SEC);
+    return 0;
 }
