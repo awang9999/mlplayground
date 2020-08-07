@@ -33,8 +33,10 @@ Output layer: sigmoid
 
 #include <stdio.h>
 #include <time.h>
+#include <math.h>
 #include "vector.h"
 #include "matrix.h"
+#include "math_helper.h"
 
 void test_ArrayLists()
 {
@@ -324,6 +326,49 @@ void test_all()
 
 /* ACTUAL CODE FOR NEURAL NET BEGINS HERE. */
 
+void shuffle(int *arr, size_t n) {
+    if (n > 1) {
+        size_t i;
+        for (i = 0; i < n; i++) {
+            size_t j = i + rand() / (RAND_MAX / (n - i) + 1);
+            int tmp = arr[j];
+            arr[j] = arr[i];
+            arr[i] = tmp;
+        }
+    }
+}
+
+int prediction(double i1, double i2, Matrix *h_w, Matrix *h_b, Matrix *o_w, Matrix *o_b) {
+    Matrix input;
+    m_init(&input, 2, 1);
+    m_set(&input, 0, 0, input_logistic(i1));
+    m_set(&input, 1, 0, input_logistic(i2));
+
+    Matrix h_result;
+    m_mult(h_w, &input, &h_result);
+    m_add(&h_result, h_b);
+
+    Matrix o_result;
+    Matrix o_w_trans;
+    m_transpose(o_w, &o_w_trans);
+    m_mult(&o_w_trans, &h_result, &o_result);
+    m_add(&o_result, o_b);
+
+    m_full_print(&o_result);
+    double output = m_get(&o_result, 0, 0);
+
+    m_free_memory(&input);
+    m_free_memory(&h_result);
+    m_free_memory(&o_result);
+
+    if (d_abs(output) < 15) {
+        return 1;
+    }
+    else {
+        return 0;
+    }
+}
+
 int main()
 {
     //Clock stuff
@@ -350,9 +395,19 @@ int main()
 
     Matrix hidden_weights;
     m_init(&hidden_weights, num_inputs, num_hidden);
+    for (int i = 0; i < (&hidden_weights)->rows; i++) {
+        for (int j = 0; j < (&hidden_weights)->cols; j++) {
+            m_set(&hidden_weights, i, j, rand_weight());
+        }
+    }
 
     Matrix output_weights;
     m_init(&output_weights, num_hidden, num_outputs);
+    for (int i = 0; i < (&output_weights)->rows; i++) {
+        for (int j = 0; j < (&output_weights)->cols; j++) {
+            m_set(&hidden_weights, i, j, rand_weight());
+        }
+    }
 
     static const int num_training_sets = 4;
     Matrix training_inputs;
@@ -362,14 +417,108 @@ int main()
     m_set(&training_inputs, 3, 0, 1);
     m_set(&training_inputs, 3, 1, 1);
 
-    m_full_print(&training_inputs);
+    // m_full_print(&training_inputs);
 
     Matrix training_outputs;
     m_init(&training_outputs, 4, 1);
     m_set(&training_outputs, 1, 0, 1);
     m_set(&training_outputs, 2, 0, 1);
 
-    m_full_print(&training_outputs);
+    // m_full_print(&training_outputs);
+
+    static const int EPOCHS = 10000;
+
+    for (int e = 0; e < EPOCHS; e++) {
+        int training_set_order[] ={ 0, 1, 2, 3 };
+        shuffle(training_set_order, num_training_sets);
+
+        for (int x = 0; x < num_training_sets; x++) {
+            int i = training_set_order[x];
+
+            // Compute hidden layer activation
+            for (int j = 0; j < num_hidden; j++) {
+                double activation = m_get(&hidden_bias, j, 0);
+                for (int k = 0; k < num_inputs; k++) {
+                    activation += m_get(&training_inputs, i, k) * m_get(&hidden_weights, k, j);
+                }
+                m_set(&hidden_layer, j, 0, sigmoid(activation));
+            }
+
+            // Compute output layer activation
+            for (int j = 0; j < num_outputs; j++) {
+                double activation = m_get(&output_bias, j, 0);
+                for (int k = 0; k < num_hidden; k++) {
+                    activation += m_get(&hidden_layer, k, 0) * m_get(&output_weights, k, j);
+                }
+                m_set(&output_layer, j, 0, sigmoid(activation));
+            }
+
+            // Compute change in output weights
+            double delta_output[1];
+            for (int j = 0; j < num_outputs; j++) {
+                double d_error = (m_get(&training_outputs, i, j) - m_get(&output_layer, j, 0));
+                delta_output[j] = d_error * weird_d_sigmoid(m_get(&output_layer, j, 0));
+            }
+
+            // Computer change in hidden layer weights
+            double delta_hidden[2];
+            for (int j = 0; j < num_hidden; j++) {
+                double d_error = 0.0f;
+                for (int k = 0; k < num_outputs; k++) {
+                    d_error += delta_output[k] * m_get(&output_weights, j, k);
+                }
+                delta_hidden[j] = d_error * weird_d_sigmoid(m_get(&hidden_layer, j, 0));
+            }
+
+            static const double learning_rate = 0.1f;
+
+            // Apply changes to output weights
+            for (int j = 0; j < num_outputs; j++) {
+                double tmp = m_get(&output_bias, j, 0);
+                m_set(&output_bias, j, 0, tmp + delta_output[j] * learning_rate);
+                for (int k = 0; k < num_hidden; k++) {
+                    double tmp2 = m_get(&output_weights, k, j);
+                    m_set(&output_weights, k, j, tmp2 + m_get(&hidden_layer, k, 0)*delta_output[j]*learning_rate);
+                }
+            }
+
+            //Apply changes to hidden weights
+            for (int j = 0; j < num_hidden; j++) {
+                double tmp = m_get(&hidden_bias, j, 0);
+                m_set(&hidden_bias, j, 0, tmp + delta_hidden[j] * learning_rate);
+                for (int k = 0; k < num_inputs; k++) {
+                    double tmp2 = m_get(&hidden_weights, k, j);
+                    m_set(&hidden_weights, k, j, tmp2 + m_get(&training_inputs, i, k) * delta_hidden[j] * learning_rate);
+                }
+            }
+        }
+    }
+
+    // printf("Final Matrices:\n");
+    // printf("Hidden layer weights\n");
+    // m_full_print(&hidden_weights);
+    // printf("Hidden layer bias\n");
+    // m_full_print(&hidden_bias);
+    // printf("Output layer weights\n");
+    // m_full_print(&output_weights);
+    // printf("Output layer bias \n");
+    // m_full_print(&output_bias);
+
+    printf("Prediction for 0, 0 (Expected: 0): %d\n\n", prediction(0, 0, &hidden_weights, &hidden_bias, &output_weights, &output_bias));
+    printf("Prediction for 0, 1 (Expected: 1): %d\n\n", prediction(0, 1, &hidden_weights, &hidden_bias, &output_weights, &output_bias));
+    printf("Prediction for 1, 0 (Expected: 1): %d\n\n", prediction(1, 0, &hidden_weights, &hidden_bias, &output_weights, &output_bias));
+    printf("Prediction for 1, 1 (Expected: 0): %d\n\n", prediction(1, 1, &hidden_weights, &hidden_bias, &output_weights, &output_bias));
+
+    printf("Prediction for 0.2, 0.8 (Expected: 1): %d\n\n", prediction(0.2, 0.8, &hidden_weights, &hidden_bias, &output_weights, &output_bias));
+    printf("Prediction for 0.8, 0.2 (Expected: 1): %d\n\n", prediction(0.8, 0.2, &hidden_weights, &hidden_bias, &output_weights, &output_bias));
+    printf("Prediction for 0.2, 0.2 (Expected: 0): %d\n\n", prediction(0.2, 0.2, &hidden_weights, &hidden_bias, &output_weights, &output_bias));
+    printf("Prediction for 0.8, 0.8 (Expected: 0): %d\n\n", prediction(0.8, 0.8, &hidden_weights, &hidden_bias, &output_weights, &output_bias));
+
+    printf("Prediction for 0.4, 0.4 (Expected: 0): %d\n\n", prediction(0.4, 0.4, &hidden_weights, &hidden_bias, &output_weights, &output_bias));
+    printf("Prediction for 0.6, 0.6 (Expected: 0): %d\n\n", prediction(0.6, 0.6, &hidden_weights, &hidden_bias, &output_weights, &output_bias));
+    printf("Prediction for 0.4, 0.6 (Expected: 1): %d\n\n", prediction(0.4, 0.6, &hidden_weights, &hidden_bias, &output_weights, &output_bias));
+    printf("Prediction for 0.6, 0.4 (Expected: 1): %d\n\n", prediction(0.6, 0.4, &hidden_weights, &hidden_bias, &output_weights, &output_bias));
+    printf("Prediction for 0.5, 0.5 (Expected: Unknown): %d\n\n", prediction(0.5, 0.5, &hidden_weights, &hidden_bias, &output_weights, &output_bias));
 
     m_free_memory(&hidden_layer);
     m_free_memory(&output_layer);

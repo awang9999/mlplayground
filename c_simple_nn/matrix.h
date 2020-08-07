@@ -29,6 +29,7 @@ void m_subtract(Matrix *a, Matrix *b);
 /* Accessors */
 
 void m_mult(Matrix *a, Matrix *b, Matrix *dest);
+void m_transpose(Matrix *a, Matrix *dest);
 void m_copy(Matrix *src, Matrix *dest);
 double m_get(Matrix *a, int r, int c);
 int m_rows(Matrix *a);

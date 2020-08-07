@@ -13,3 +13,7 @@ double d_sigmoid(double x);
 double weird_d_sigmoid(double x);
 
 double rand_weight();
+
+double d_abs(double x);
+
+double input_logistic(double x);

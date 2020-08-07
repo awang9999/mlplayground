@@ -97,7 +97,7 @@ void m_subtract(Matrix *a, Matrix *b) {
 
 /* Naive matrix multiplication O(n^3) */
 void m_mult(Matrix *a, Matrix *b, Matrix *dest) {
-    if (a->rows != b->cols || a->cols != b->rows) {
+    if (a->cols != b->rows) {
         printf("Cannot multiply matrices: Mismatched dimensions.\n");
         m_full_print(a);
         m_full_print(b);
@@ -111,6 +111,15 @@ void m_mult(Matrix *a, Matrix *b, Matrix *dest) {
                 sum += m_get(a, i, k) * m_get(b, k, j);
             }
             m_set(dest, i, j, sum);
+        }
+    }
+}
+
+void m_transpose(Matrix *a, Matrix *dest) {
+    m_init(dest, a->cols, a->rows);
+    for (int i = 0; i < a->rows; i++) {
+        for (int j = 0; j < a->cols; j++) {
+            m_set(dest, j, i, m_get(a, i, j));
         }
     }
 }

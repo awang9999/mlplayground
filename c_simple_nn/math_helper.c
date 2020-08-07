@@ -36,3 +36,14 @@ double weird_d_sigmoid(double x) {
 double rand_weight() {
     return ((double)rand())/((double)RAND_MAX);
 }
+
+double d_abs(double x) {
+    if (x < 0) {
+        return -x;
+    }
+    return x;
+}
+
+double input_logistic(double x) {
+    return 1.0f / (1 + exp(-25 * (x - 0.5)));
+}
